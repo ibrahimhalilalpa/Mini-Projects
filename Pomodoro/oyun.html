@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sayıları Sırayla Tıkla</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background: #f7f7f7;
+        }
+
+        h1 {
+            margin-top: 40px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 15px;
+            justify-content: center;
+            margin: 40px auto;
+        }
+
+        .number-btn {
+            padding: 30px;
+            font-size: 24px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .number-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #message {
+            font-size: 20px;
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Sayıları Sırayla Tıkla</h1>
+    <div id="game-board"></div>
+    <div id="message"></div>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const message = document.getElementById('message');
+
+        let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let currentNumber = 1;
+        let startTime, endTime;
+
+        // Diziyi karıştır
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            shuffle(numbers);
+            gameBoard.innerHTML = '';
+            message.textContent = '';
+            currentNumber = 1;
+            startTime = new Date();
+
+            numbers.forEach(num => {
+                const btn = document.createElement('button');
+                btn.className = 'number-btn';
+                btn.textContent = num;
+                btn.onclick = () => handleClick(btn, num);
+                gameBoard.appendChild(btn);
+            });
+        }
+
+        function handleClick(btn, num) {
+            if (num === currentNumber) {
+                btn.disabled = true;
+                btn.style.backgroundColor = '#2196F3';
+                currentNumber++;
+
+                if (currentNumber > 9) {
+                    endTime = new Date();
+                    const duration = ((endTime - startTime) / 1000).toFixed(2);
+                    message.textContent = `Tebrikler! Süren: ${duration} saniye 🎉`;
+                }
+            } else {
+                alert('Yanlış sayı! Lütfen sırayla git.');
+            }
+        }
+
+        // Oyunu başlat
+        startGame();
+    </script>
+
+</body>
+
+</html>

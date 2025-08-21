@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OCR Entegrasyonu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--İcon-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .overlay-box {
+            position: absolute;
+            border: 3px solid #00FF00;
+            pointer-events: none;
+        }
+
+        #cameraModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1001;
+        }
+
+        .capture-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .capture-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .capture-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .close-btn {
+            padding: 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .close-btn:hover {
+            background: #b02a37;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 50px 5px;
+            padding: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .input-group button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #saveBtn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #loadingSpinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00FF00;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .button-container {
+                width: 80%;
+                max-width: 300px;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .capture-btn {
+                width: 80%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <div class="input-group">
+            <input type="text" id="dikeyInput" placeholder="Dikey Kod (ETBU)">
+            <button onclick="openCamera('dikey')"><i class="bi bi-camera-fill"></i></button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="yatayInput" placeholder="Yatay Kod">
+            <button onclick="openCamera('yatay')"><i class="bi bi-camera"></i></button>
+        </div>
+        <button id="saveBtn" onclick="saveForm()">Kaydet</button>
+    </div>
+
+    <!-- Kamera Modal -->
+    <div id="cameraModal">
+        <div class="modal-content">
+            <div class="video-container">
+                <video id="video" autoplay playsinline></video>
+                <div id="yatayBox" class="overlay-box" style="display: none;"></div>
+                <div id="dikeyBox" class="overlay-box" style="display: none;"></div>
+            </div>
+            <div class="button-container">
+                <button class="capture-btn" onclick="captureImage()" id="captureBtn">Fotoğraf Çek</button>
+                <button class="close-btn" onclick="closeCamera()"><i class="bi bi-x-lg"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yükleme Spinner'ı -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>İşleniyor...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <script>
+        let currentMode = '';
+        let videoStream = null;
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const captureBtn = document.getElementById('captureBtn');
+
+        const openCamera = async (mode) => {
+            currentMode = mode;
+            document.getElementById('cameraModal').style.display = 'block';
+            document.getElementById(`${mode}Box`).style.display = 'block';
+
+            // Her kamera açıldığında ilgili input’u sıfırla
+            document.getElementById(`${mode}Input`).value = '';
+
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                const video = document.getElementById('video');
+                video.srcObject = videoStream;
+                await video.play();
+                updateOverlayPositions(mode);
+                window.addEventListener('resize', () => updateOverlayPositions(mode));
+            } catch (err) {
+                console.error("Kamera hatası:", err);
+                alert("Kamera erişimi için izin verin!");
+            }
+        };
+
+        const updateOverlayPositions = (mode) => {
+            const video = document.getElementById('video');
+            const videoRect = video.getBoundingClientRect();
+            const box = document.getElementById(`${mode}Box`);
+
+            const yatayWidth = videoRect.width * 0.55;
+            const yatayHeight = videoRect.height * 0.06;
+            const dikeyWidth = videoRect.width * 0.15;
+            const dikeyHeight = videoRect.height * 0.36;
+
+            if (mode === 'yatay') {
+                box.style.width = `${yatayWidth}px`;
+                box.style.height = `${yatayHeight}px`;
+            } else {
+                box.style.width = `${dikeyWidth}px`;
+                box.style.height = `${dikeyHeight}px`;
+            }
+
+            box.style.left = `${(videoRect.width - parseFloat(box.style.width)) / 2}px`;
+            box.style.top = `${(videoRect.height - parseFloat(box.style.height)) / 2}px`;
+        };
+
+        const processImage = (ctx, width, height, isVertical) => {
+            if (width <= 0 || height <= 0) return;
+
+            let imageData = ctx.getImageData(0, 0, width, height);
+            let data = imageData.data;
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(ctx.canvas, 0, 0);
+            tempCtx.filter = 'blur(1px)';
+
+            // Gri skala
+            imageData = ctx.getImageData(0, 0, width, height);
+            data = imageData.data;
+            let sum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const grayscale = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                sum += grayscale;
+                data[i] = data[i + 1] = data[i + 2] = grayscale;
+            }
+            const mean = sum / (data.length / 4);
+            ctx.putImageData(imageData, 0, 0);
+
+            // Keskin kontrast
+            imageData = ctx.getImageData(0, 0, width, height);
+            data = imageData.data;
+            const contrastFactor = 2.0;
+            for (let i = 0; i < data.length; i += 4) {
+                const adjusted = (data[i] - mean) * contrastFactor + mean;
+                data[i] = data[i + 1] = data[i + 2] = Math.min(255, Math.max(0, adjusted));
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            // Adaptif eşikleme
+            imageData = ctx.getImageData(0, 0, width, height);
+            data = imageData.data;
+            const threshold = isVertical ? Math.min(255, Math.max(0, mean + 30)) : Math.min(255, Math.max(0, mean - 30));
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = isVertical ? (data[i] > threshold ? 0 : 255) : (data[i] < threshold ? 0 : 255);
+                data[i + 1] = data[i];
+                data[i + 2] = data[i];
+            }
+            //ctx.putImageData(imageData, 0, 0);
+
+        };
+
+        const captureImage = async () => {
+            try {
+                // Spinner’ı görsel işlenmeye başlarken aktif et
+                loadingSpinner.style.display = 'block';
+                captureBtn.disabled = true;
+
+                const video = document.getElementById('video');
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const box = document.getElementById(`${currentMode}Box`);
+                const rect = box.getBoundingClientRect();
+                const videoRect = video.getBoundingClientRect();
+
+                const videoAspect = video.videoWidth / video.videoHeight;
+                const containerAspect = videoRect.width / videoRect.height;
+                let scaleX, scaleY, offsetX = 0, offsetY = 0;
+
+                if (videoAspect > containerAspect) {
+                    scaleY = video.videoHeight / videoRect.height;
+                    scaleX = scaleY;
+                    const scaledWidth = videoRect.width * scaleX;
+                    offsetX = (video.videoWidth - scaledWidth) / 2;
+                } else {
+                    scaleX = video.videoWidth / videoRect.width;
+                    scaleY = scaleX;
+                    const scaledHeight = videoRect.height * scaleY;
+                    offsetY = (video.videoHeight - scaledHeight) / 2;
+                }
+
+                const cropX = Math.max(0, (rect.left - videoRect.left) * scaleX + offsetX);
+                const cropY = Math.max(0, (rect.top - videoRect.top) * scaleY + offsetY);
+                let cropW = Math.min(rect.width * scaleX, video.videoWidth - cropX);
+                let cropH = Math.min(rect.height * scaleY, video.videoHeight - cropY);
+
+                if (currentMode === 'dikey') {
+                    cropW = Math.max(cropW, 50);
+                    cropH = Math.max(cropH, 150);
+                }
+
+                console.log("Crop Koordinatları:", { cropX, cropY, cropW, cropH });
+
+                const croppedCanvas = document.createElement('canvas');
+                croppedCanvas.width = cropW;
+                croppedCanvas.height = cropH;
+                const croppedCtx = croppedCanvas.getContext('2d');
+                croppedCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+                processImage(croppedCtx, cropW, cropH, currentMode === 'dikey');
+
+                const { data: { text, confidence } } = await Tesseract.recognize(
+                    croppedCanvas,
+                    currentMode === 'dikey' ? 'eng' : 'tur+eng',
+                    {
+                        tessedit_ocr_engine_mode: 3,
+                        tessedit_pageseg_mode: currentMode === 'dikey' ? 4 : 3,
+                        tessedit_char_whitelist: currentMode === 'dikey' ? '0123456789' : undefined
+                    }
+                );
+
+                let cleanedText = text.trim();
+                console.log("Tanınan metin:", cleanedText, "Güven:", confidence);
+                if (currentMode === 'dikey') {
+                    cleanedText = cleanedText.replace(/\D/g, '');
+                    cleanedText = `ETBU ${cleanedText || "Metin algılanamadı"}`;
+                } else {
+                    cleanedText = cleanedText || "Metin algılanamadı";
+                }
+
+                // Input’u güncellemeden önce eski değeri sıfırla
+                document.getElementById(`${currentMode}Input`).value = '';
+                document.getElementById(`${currentMode}Input`).value = cleanedText;
+
+                closeCamera();
+            } catch (error) {
+                console.error("Hata:", error);
+                alert("Bir hata oluştu, konsolu kontrol edin!");
+            } finally {
+                // Değer yazıldığında (işlem bittiğinde) spinner’ı gizle
+                loadingSpinner.style.display = 'none';
+                captureBtn.disabled = false;
+            }
+        };
+
+        const closeCamera = () => {
+            document.getElementById('cameraModal').style.display = 'none';
+            document.getElementById(`${currentMode}Box`).style.display = 'none';
+            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
+        };
+
+        const saveForm = () => {
+            const results = {
+                dikey: document.getElementById('dikeyInput').value,
+                yatay: document.getElementById('yatayInput').value
+            };
+            alert(`Kaydedilen Değerler:\nDikey: ${results.dikey}\nYatay: ${results.yatay}`);
+        };
+    </script>
+</body>
+
+</html>

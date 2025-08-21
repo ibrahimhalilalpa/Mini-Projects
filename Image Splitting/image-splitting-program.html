@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Görsel Parçalama Uygulaması</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #333;
+            transition: background 0.5s ease;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #2c3e50 0%, #4b6cb7 100%);
+            color: #e0e0e0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #ff6a88, #ff8e53);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 40px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .input-group {
+            background: #2d3748;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        body.dark-mode .input-group label {
+            color: #e0e0e0;
+        }
+
+        .input-group input[type="file"],
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input[type="file"]:focus,
+        .input-group input[type="number"]:focus {
+            outline: none;
+            border-color: #ff8e53;
+            box-shadow: 0 0 10px rgba(255, 142, 83, 0.3);
+        }
+
+        body.dark-mode .input-group input[type="file"],
+        body.dark-mode .input-group input[type="number"] {
+            background: #4a5568;
+            border-color: #718096;
+            color: #e0e0e0;
+        }
+
+        .preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #ff6a88, #ff8e53);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .input-group button:hover {
+            transform: scale(1.02);
+        }
+
+        .input-group button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.4s ease;
+        }
+
+        .input-group button:hover::after {
+            left: 100%;
+        }
+
+        .result {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 20px;
+            overflow-x: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 90%;
+        }
+
+        body.dark-mode .result {
+            background: #2d3748;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .piece-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+            animation-delay: calc(var(--index) * 0.2s);
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .piece-container:hover {
+            transform: scale(1.05);
+        }
+
+        .piece-canvas {
+            display: block;
+            max-height: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease, border 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .piece-canvas:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            border: 2px solid #ff8e53;
+        }
+
+        .dimensions {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        body.dark-mode .dimensions {
+            color: #b0b0b0;
+        }
+
+        .controls {
+            display: none;
+            margin-top: 10px;
+            gap: 10px;
+        }
+
+        .controls.active {
+            display: flex;
+        }
+
+        .controls button {
+            padding: 8px 12px;
+            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+            border: none;
+            border-radius: 6px;
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .controls button:hover {
+            background: linear-gradient(to right, #c2e9fb, #a1c4fd);
+            transform: scale(1.05);
+        }
+
+        .piece-container button.download-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: linear-gradient(to right, #ff6a88, #ff8e53);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .piece-container button.download-btn:hover {
+            background: linear-gradient(to right, #ff8e53, #ff6a88);
+            transform: scale(1.05);
+        }
+
+        .download-all {
+            margin-top: 40px;
+        }
+
+        .download-all button {
+            padding: 12px 24px;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .download-all button:hover {
+            background: linear-gradient(to right, #0072ff, #00c6ff);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #4a5568;
+        }
+
+        .theme-toggle img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #e53e3e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff8e53;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #ff8e53;
+        }
+
+        /* Responsive Tasarım */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .input-group {
+                padding: 20px;
+            }
+
+            .result {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .piece-container {
+                margin: 0;
+            }
+
+            .piece-canvas {
+                max-height: 300px;
+            }
+
+            .piece-container button,
+            .download-all button {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+
+            .dimensions {
+                font-size: 0.7rem;
+            }
+
+            .controls button {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <img src="https://img.icons8.com/ios-filled/50/000000/sun.png" alt="Theme Toggle" id="themeIcon">
+    </div>
+
+    <h1>Görsel Parçalama Uygulaması</h1>
+    <div class="input-group">
+        <label for="imageInput">Görsel Yükle:</label>
+        <input type="file" id="imageInput" accept="image/*" onchange="showPreview()">
+        <div class="preview" id="preview"></div>
+
+        <label for="pieces">Parça Sayısı:</label>
+        <input type="number" id="pieces" min="1" value="3" placeholder="Minimum 1">
+
+        <label for="gap">Kesilecek Boşluk Genişliği (px):</label>
+        <input type="number" id="gap" min="0" value="10" placeholder="Görsellerin arasından kesilecek alan">
+
+        <button onclick="processImage()">Görseli Parçala</button>
+        <div class="spinner" id="spinner"></div>
+    </div>
+    <div id="result" class="result"></div>
+    <div id="downloadAll" class="download-all"></div>
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">×</span>
+            <img id="modalImage" src="" alt="Full Size Image">
+        </div>
+    </div>
+
+    <!-- JSZip kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- FileSaver.js kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <script>
+        let piecesData = [];
+        let originalImage = null;
+
+        // Tema değiştirme
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const themeIcon = document.getElementById('themeIcon');
+            themeIcon.src = document.body.classList.contains('dark-mode')
+                ? 'https://img.icons8.com/ios-filled/50/ffffff/moon-symbol.png'
+                : 'https://img.icons8.com/ios-filled/50/000000/sun.png';
+        }
+
+        // Görsel önizleme
+        function showPreview() {
+            const imageInput = document.getElementById('imageInput');
+            const previewDiv = document.getElementById('preview');
+            previewDiv.innerHTML = '';
+            if (imageInput.files[0]) {
+                const img = new Image();
+                img.src = URL.createObjectURL(imageInput.files[0]);
+                img.onload = () => URL.revokeObjectURL(img.src);
+                previewDiv.appendChild(img);
+            }
+        }
+
+        // Toast mesajı göster
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Modal açma
+        function openModal(src) {
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = src;
+            modal.style.display = 'flex';
+        }
+
+        // Modal kapatma
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+        }
+
+        // Görseli parçalara ayırma
+        async function processImage() {
+            const imageInput = document.getElementById('imageInput');
+            const piecesInput = document.getElementById('pieces');
+            const gapInput = document.getElementById('gap');
+            const resultDiv = document.getElementById('result');
+            const downloadAllDiv = document.getElementById('downloadAll');
+            const spinner = document.getElementById('spinner');
+
+            // Inputları al
+            const file = imageInput.files[0];
+            const pieces = parseInt(piecesInput.value);
+            const gap = parseInt(gapInput.value);
+
+            if (!file || pieces < 1 || gap < 0) {
+                showToast('Lütfen geçerli bir görsel, parça sayısı ve kesilecek boşluk genişliği girin.');
+                return;
+            }
+
+            // Yükleme animasyonu
+            spinner.style.display = 'block';
+            resultDiv.innerHTML = '';
+            downloadAllDiv.innerHTML = '';
+
+            // Görseli yükle
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            await new Promise(resolve => img.onload = resolve);
+            originalImage = img; // Orijinal görseli sakla
+
+            const totalWidth = img.width;
+            const height = img.height;
+
+            // Hesaplamalar
+            const totalGapWidth = (pieces - 1) * gap;
+            const remainingWidth = totalWidth - totalGapWidth;
+            const pieceWidth = remainingWidth / pieces;
+
+            if (pieceWidth <= 0) {
+                showToast('Kesilecek boşluk genişliği çok büyük, görsel parçalanamaz.');
+                spinner.style.display = 'none';
+                return;
+            }
+
+            piecesData = [];
+
+            // Parçaları oluştur
+            for (let i = 0; i < pieces; i++) {
+                const canvas = document.createElement('canvas');
+                canvas.className = 'piece-canvas';
+                canvas.width = pieceWidth;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                // Başlangıç pozisyonu
+                const initialSrcX = i * (pieceWidth + gap);
+                ctx.drawImage(img, initialSrcX, 0, pieceWidth, height, 0, 0, pieceWidth, height);
+
+                const pieceContainer = document.createElement('div');
+                pieceContainer.className = 'piece-container';
+                pieceContainer.style.setProperty('--index', i);
+                pieceContainer.appendChild(canvas);
+
+                // Boyutları göster
+                const dimensions = document.createElement('div');
+                dimensions.className = 'dimensions';
+                dimensions.textContent = `${Math.round(pieceWidth)} x ${height} px`;
+                pieceContainer.appendChild(dimensions);
+
+                // Kontrol butonları
+                const controls = document.createElement('div');
+                controls.className = 'controls';
+
+                const leftBtn = document.createElement('button');
+                leftBtn.textContent = '⬅️';
+                leftBtn.onclick = () => adjustPiece(i, -10, 0); // 10px sola kaydır
+
+                const rightBtn = document.createElement('button');
+                rightBtn.textContent = '➡️';
+                rightBtn.onclick = () => adjustPiece(i, 10, 0); // 10px sağa kaydır
+
+                const upBtn = document.createElement('button');
+                upBtn.textContent = '⬆️';
+                upBtn.onclick = () => adjustPiece(i, 0, -10); // 10px yukarı kaydır
+
+                const downBtn = document.createElement('button');
+                downBtn.textContent = '⬇️';
+                downBtn.onclick = () => adjustPiece(i, 0, 10); // 10px aşağı kaydır
+
+                controls.appendChild(leftBtn);
+                controls.appendChild(rightBtn);
+                controls.appendChild(upBtn);
+                controls.appendChild(downBtn);
+                pieceContainer.appendChild(controls);
+
+                // Görsele tıklama olayı: Düzenleme modunu aç/kapat
+                canvas.onclick = () => {
+                    controls.classList.toggle('active');
+                    if (!controls.classList.contains('active')) {
+                        openModal(canvas.toDataURL()); // Düzenleme modu kapanırsa modal aç
+                    }
+                };
+
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.textContent = `Parça ${i + 1}'i İndir`;
+                downloadBtn.onclick = () => {
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL();
+                    link.download = `parca_${i + 1}.png`;
+                    link.click();
+                };
+                pieceContainer.appendChild(downloadBtn);
+
+                resultDiv.appendChild(pieceContainer);
+
+                // Parça verilerini sakla
+                piecesData.push({
+                    canvas: canvas,
+                    srcX: initialSrcX,
+                    srcY: 0,
+                    width: pieceWidth,
+                    height: height
+                });
+            }
+
+            // Çoklu indirme butonu
+            const downloadAllBtn = document.createElement('button');
+            downloadAllBtn.textContent = 'Tüm Parçaları İndir (ZIP)';
+            downloadAllBtn.onclick = () => {
+                const zip = new JSZip();
+                piecesData.forEach((piece, index) => {
+                    const dataUrl = piece.canvas.toDataURL();
+                    const base64 = dataUrl.split(',')[1];
+                    zip.file(`parca_${index + 1}.png`, base64, { base64: true });
+                });
+                zip.generateAsync({ type: 'blob' }).then(blob => {
+                    saveAs(blob, 'parcalar.zip');
+                });
+            };
+            downloadAllDiv.appendChild(downloadAllBtn);
+
+            spinner.style.display = 'none';
+            URL.revokeObjectURL(img.src);
+        }
+
+        // Parçayı kaydırma fonksiyonu
+        function adjustPiece(index, dx, dy) {
+            const piece = piecesData[index];
+            piece.srcX += dx;
+            piece.srcY += dy;
+
+            // Sınır kontrolü (görselin tamamen dışarı çıkmasını engelle)
+            const maxSrcX = originalImage.width - piece.width;
+            const maxSrcY = originalImage.height - piece.height;
+            piece.srcX = Math.max(0, Math.min(piece.srcX, maxSrcX));
+            piece.srcY = Math.max(0, Math.min(piece.srcY, maxSrcY));
+
+            // Canvas'ı güncelle
+            const ctx = piece.canvas.getContext('2d');
+            ctx.clearRect(0, 0, piece.width, piece.height);
+            ctx.drawImage(originalImage, piece.srcX, piece.srcY, piece.width, piece.height, 0, 0, piece.width, piece.height);
+        }
+
+        // Modal dışına tıklayınca kapatma
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>

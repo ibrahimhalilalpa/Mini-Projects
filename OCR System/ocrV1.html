@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Uygulaması</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js-core@4.0.2/tesseract-core.wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>        
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            text-align: center;
+            padding: 20px;
+        }
+        h2 {
+            color: #ff9800;
+        }
+        .container {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0px 0px 10px rgba(255, 152, 0, 0.5);
+        }
+        input, select, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input, select {
+            background: #333;
+            color: white;
+        }
+        button {
+            background: #ff9800;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #e68900;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #preview, #cameraPreview {
+            max-width: 100%;
+            border-radius: 10px;
+            display: none;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: #444;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            width: 0;
+            background: #ff9800;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>📷 OCR Uygulaması</h2>
+    <div class="container">
+        <input type="file" id="imageInput" accept="image/*" onchange="previewImage()">
+        <button onclick="openCamera()">📸 Kamerayı Aç</button>
+
+        <button onclick="captureImage()">📸 Kameradan Çek</button>
+        <select id="language">
+            <option value="tur">Türkçe</option>
+            <option value="eng">İngilizce</option>
+            <option value="tur+eng">Türkçe + İngilizce</option>
+        </select>
+        <button onclick="extractText()">🔍 Metni Oku</button>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <p id="status">Durum: Bekleniyor...</p>
+        <img id="preview">
+        <video id="cameraPreview" autoplay></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <textarea id="output" readonly></textarea>
+        <button onclick="copyText()">📋 Kopyala</button>
+        <button onclick="downloadText()">💾 İndir</button>
+        <button onclick="speakText()">🔊 Sesli Oku</button>
+    </div>
+
+    <script>
+        function previewImage() {
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('preview').style.display = "block";
+                document.getElementById('cameraPreview').style.display = "none";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function openCamera() {
+            const video = document.getElementById('cameraPreview');
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.style.display = "block";
+                    document.getElementById('preview').style.display = "none";
+                })
+                .catch(err => alert("Kamera erişimi reddedildi!"));
+        }
+
+        function captureImage() {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            document.getElementById('preview').src = canvas.toDataURL();
+            document.getElementById('preview').style.display = "block";
+            video.srcObject.getTracks().forEach(track => track.stop()); // Kamerayı kapat
+            video.style.display = "none";
+        }
+
+        function extractText() {
+            const img = document.getElementById('preview').src;
+            if (!img) {
+                alert("Lütfen bir resim yükleyin veya kameradan çekin!");
+                return;
+            }
+            document.getElementById('status').innerText = "OCR işlemi devam ediyor...";
+            document.getElementById('progress').style.width = "10%";
+
+            Tesseract.recognize(img, document.getElementById('language').value, {
+                logger: m => {
+                    if (m.status === "recognizing text") {
+                        document.getElementById('progress').style.width = `${Math.min(10 + m.progress * 90, 100)}%`;
+                    }
+                }
+            }).then(({ data: { text } }) => {
+                document.getElementById('output').value = text;
+                document.getElementById('status').innerText = "İşlem tamamlandı!";
+                document.getElementById('progress').style.width = "100%";
+            }).catch(() => {
+                document.getElementById('status').innerText = "Hata oluştu!";
+                document.getElementById('progress').style.width = "0%";
+            });
+        }
+
+        function copyText() {
+            navigator.clipboard.writeText(document.getElementById('output').value);
+            alert("Metin kopyalandı!");
+        }
+
+        function downloadText() {
+            const blob = new Blob([document.getElementById('output').value], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "OCR_Metin.txt";
+            link.click();
+        }
+
+        function speakText() {
+            const text = document.getElementById('output').value;
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = document.getElementById('language').value.includes("tur") ? "tr-TR" : "en-US";
+            window.speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+</html>

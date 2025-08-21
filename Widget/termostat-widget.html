@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Termostat Modal Örneği</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: "Roboto", sans-serif;
+                /* Home Assistant benzeri font */
+            }
+
+            body {
+                background: #f4f4f4;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+
+            /* Ana sayfada gözüken buton */
+            #openModalBtn {
+                padding: 10px 20px;
+                font-size: 1rem;
+                background-color: #ff6d00;
+                color: #fff;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            #openModalBtn:hover {
+                background-color: #e65e00;
+            }
+
+            /* Modalın üstündeki saydam katman */
+            .modal-overlay {
+                display: none;
+                /* Başlangıçta kapalı */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                /* Üstte görünmesi için yüksek index */
+            }
+
+            /* Modalın kendisi */
+            .modal {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            /* Termostat container (içerik) */
+            .thermostat-container {
+                width: 650px;
+                /* Boyutu biraz daralttım */
+                background: #fff;
+                border-radius: 20px;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+                padding: 20px;
+                position: relative;
+                height: 650px;
+            }
+
+            /* Üst kısım (Başlık ve X butonu) */
+            .thermostat-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+                position: relative;
+            }
+
+            .thermostat-header .title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #444;
+                margin-left: 8px;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 1.2rem;
+                cursor: pointer;
+                color: #666;
+                transition: color 0.3s;
+            }
+
+            .close-btn:hover {
+                color: #000;
+            }
+
+            /* İçerik */
+            .content {
+                text-align: center;
+                margin-top: 4rem;
+            }
+
+            .current-label {
+                font-size: 0.95rem;
+                color: #666;
+            }
+
+            .current-temp {
+                font-size: 1.1rem;
+                color: #333;
+                margin-top: 2px;
+                margin-bottom: 0.25rem;
+            }
+
+            .status {
+                font-size: 0.9rem;
+                color: #ff6d00;
+                font-weight: 500;
+                margin-bottom: 1rem;
+            }
+
+
+
+            .set-temp {
+                font-size: 1.4rem;
+                color: #222;
+                margin: 0.25rem 0;
+            }
+
+            .controls {
+                margin-top: 1rem;
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+            }
+
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                border: none;
+                border-radius: 50%;
+                font-size: 1.5rem;
+                cursor: pointer;
+                background-color: #ff6d00;
+                color: #fff;
+                transition: background-color 0.3s;
+            }
+
+            .control-btn:hover {
+                background-color: #e65e00;
+            }
+
+            .mode {
+                margin-top: 1rem;
+                font-size: 0.9rem;
+                color: #555;
+                display: flex;
+                justify-content: center;
+                gap: 16px;
+            }
+
+            .mode span {
+                display: block;
+            }
+
+            .mode strong {
+                font-weight: 500;
+            }
+        </style>
+
+        <style>
+            body {
+                margin: 0;
+                font-family: "Roboto", sans-serif;
+                background-color: #f9f9f9;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+
+            .container {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-top: 1.5rem;
+                margin-bottom: 1rem;
+                padding: 40px;
+            }
+
+            /* Termostat görünümü */
+            .thermostat {
+                position: relative;
+                width: 320px;
+                height: 320px;
+                margin: 0 auto;
+                background: conic-gradient(#ff6d00 0deg,
+                        #ff6d00 220deg,
+                        #ddd 220deg,
+                        #ddd 360deg);
+                border-radius: 50%;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                overflow: hidden;
+            }
+
+            /* Turuncu yay (270°’lik bir açı kullanıyoruz) */
+            .circle-bg {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 260px;
+                height: 260px;
+                transform: translate(-50%, -50%);
+                border-radius: 50%;
+                background-color: beige;
+                /* Varsayılan renk */
+            }
+
+            /* Orta kısımdaki bilgiler (durum, sıcaklık) */
+            .center-info {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                pointer-events: none;
+            }
+
+            .status {
+                font-size: 1rem;
+                color: #ff6d00;
+                margin-bottom: 8px;
+            }
+
+            .temperature {
+                font-size: 2.5rem;
+                color: #444;
+                margin-bottom: 8px;
+                font-weight: bold;
+            }
+
+            .degree-symbol {
+                font-size: 1.5rem;
+                vertical-align: super;
+            }
+
+            /* Butonlar */
+            .buttons {
+                position: absolute;
+                bottom: 45px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 15px;
+            }
+
+            .btn {
+                width: 45px;
+                height: 45px;
+                border: none;
+                border-radius: 50%;
+                background-color: #fff;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                font-size: 1.5rem;
+                color: #444;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                border: 1px solid #766666;
+            }
+
+            .btn:hover {
+                background-color: #f0f0f0;
+            }
+
+            /* Termometreye benzeyen dikey progress bar */
+            .thermometer {
+                position: relative;
+                width: 20px;
+                height: 250px;
+                background: #eee;
+                border-radius: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                cursor: grab;
+                overflow: visible;
+                user-select: none;
+                touch-action: none;
+            }
+
+            /* Dereceleri göstermek için */
+            .thermometer-scale {
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 1px;
+                height: 100%;
+                background: transparent;
+            }
+
+            .tick {
+                position: absolute;
+                left: -5px;
+                width: 10px;
+                height: 1px;
+                background: #999;
+            }
+
+            .tick-label {
+                position: absolute;
+                left: 25px;
+                transform: translateY(-50%);
+                font-size: 0.6rem;
+                color: #666;
+            }
+
+            /* Doldurma alanı */
+            .thermometer-fill {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 50%;
+                background: #bbb;
+                border-radius: 20px;
+                transition: height 0.1s, background-color 0.3s;
+                cursor: grab;
+
+            }
+
+            .thermometer::after {
+                content: '↕';
+                /* Veya "Sürükle" yazabilirsiniz */
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 20px;
+                color: #ff6d00;
+                cursor: grab;
+
+            }
+
+            .thermometer-fill::after {
+                content: '';
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 18px;
+                height: 18px;
+                background-color: transparent;
+                border-radius: 50%;
+                border: 2px solid #fff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                cursor: grab;
+            }
+        </style>
+
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+
+            .dropdown-button {
+                background-color: #f5f5f5;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .dropdown-menu {
+                display: none;
+                position: absolute;
+                background-color: white;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                border-radius: 10px;
+                overflow: hidden;
+                min-width: 120px;
+            }
+
+            .dropdown-menu button {
+                width: 100%;
+                padding: 10px;
+                border: none;
+                background: none;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            .dropdown-menu button:hover {
+                background-color: #e0e0e0;
+            }
+
+            .selected {
+                background-color: #cce5ff;
+            }
+
+            .footer-buttons {
+                height: 50px;
+                width: 100%;
+                gap: 20px;
+                display: flex;
+                justify-content: center;
+
+            }
+
+            .current-temp-container {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+
+            .current-label {
+                margin-top: 20px;
+                font-size: 20px;
+                color: #666;
+            }
+
+            .current-temp {
+                margin-top: 10px;
+                font-size: 30px;
+                font-weight: bold;
+                color: #333;
+            }
+        </style>
+</head>
+
+<body>
+
+    <!-- Ana sayfadaki buton -->
+    <button id="openModalBtn">Termostatı Aç</button>
+
+    <!-- Modal Overlay + İçerik -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="thermostat-container">
+                <!-- Üst kısım (başlık + X butonu) -->
+                <div class="thermostat-header">
+                    <span class="title">Ground Floor Thermostat</span>
+                    <button class="close-btn" id="closeBtn">✕</button>
+                </div>
+
+                <!-- Mevcut Sıcaklık Alanı -->
+                <div class="current-temp-container">
+                    <div class="current-label">Mevcut sıcaklık</div>
+                    <div class="current-temp"><span id="currentTemp">25.5</span><span class="degree-symbol">°C</span>
+                    </div>
+
+
+                </div>
+
+
+                <!-- İçerik -->
+                <div class="container">
+
+                    <!-- Termostat -->
+                    <div class="thermostat" id="thermostat">
+                        <!-- Daire içinde turuncu/gri alan -->
+                        <div class="circle-bg" id="circleBg"></div>
+                        <!-- Orta bilgi alanı -->
+                        <div class="center-info">
+                            <div class="status" id="statusText">Isıtılıyor</div>
+                            <div class="temperature">
+                                <span id="tempValue">25.5</span>
+                                <span class="degree-symbol">°C</span>
+                            </div>
+                        </div>
+                        <!-- +/- butonları -->
+                        <div class="buttons">
+                            <button class="btn" id="minusBtn">-</button>
+                            <button class="btn" id="plusBtn">+</button>
+                        </div>
+                    </div>
+                    <!-- Termometre şeklinde dikey progress bar -->
+                    <div class="thermometer" id="thermometer">
+                        <!-- Dereceleri göstermek için scale çizgileri -->
+                        <div class="thermometer-scale" id="thermometerScale"></div>
+                        <!-- Doldurma alanı -->
+                        <div class="thermometer-fill" id="thermometerFill"></div>
+                    </div>
+                </div>
+
+
+                <div class="footer-buttons">
+                    <div class="dropdown">
+                        <button class="dropdown-button" id="dropdownBtn"><span>Mod: <strong>Isıtma</strong></span></button>
+                        <div class="dropdown-menu">
+                            <button data-value="Otomatik">⚙️ Otomatik</button>
+                            <button data-value="Isıtma" class="selected">🔥 Isıtma</button>
+                            <button data-value="Kapalı">⏻ Kapalı</button>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-button">🛋️ Konfor</button>
+                        <div class="dropdown-menu">
+                            <button data-value="Konfor" class="selected">🛋️ Konfor</button>
+                            <button data-value="Dışarıda">👤 Dışarıda</button>
+                            <button data-value="Eko">🌿 Eko</button>
+                            <button data-value="frost_protection">• frost_protection</button>
+                            <button data-value="external">• external</button>
+                            <button data-value="Evde">🏠 Evde</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+    // Dropdown menüyü açma/kapatma
+    $('.dropdown-button').click(function () {
+        $(this).next('.dropdown-menu').toggle();
+    });
+
+    // Dropdown menüdeki butonlara tıklanınca
+    $('.dropdown-menu button').click(function () {
+        var selectedText = $(this).html();
+        var selectedValue = $(this).attr('data-value');
+
+        // Seçilen modu butona yaz
+        $(this).closest('.dropdown').find('.dropdown-button').html(selectedText);
+        $(this).siblings().removeClass('selected');
+        $(this).addClass('selected');
+        $(this).parent().hide();
+
+        // Seçilen moda göre işlem yap
+        handleModeChange(selectedValue);
+    });
+
+    // Dışarı tıklanınca dropdown'ı kapat
+    $(document).click(function (event) {
+        if (!$(event.target).closest('.dropdown').length) {
+            $('.dropdown-menu').hide();
+        }
+    });
+
+    // Mod değişikliğini işle
+    function handleModeChange(mode) {
+        switch (mode) {
+            case 'Kapalı':
+                // Kapalı mod: Sıcaklık ayarı pasif olsun
+                disableThermostat();
+                break;
+            case 'Otomatik':
+                // Otomatik mod: Sıcaklık otomatik ayarlansın
+                enableAutoMode();
+                break;
+            case 'Isıtma':
+                // Isıtma mod: Sıcaklık 30°C'ye ayarlansın
+                setHeatingMode();
+                break;
+            default:
+                console.log('Bilinmeyen mod:', mode);
+        }
+    }
+
+    // Kapalı mod işlevi
+    function disableThermostat() {
+        // Sıcaklık ayarını pasif hale getir
+        setTemp = currentTemp; // Mevcut sıcaklıkta sabit kal
+        updateThermostatUI();
+        alert('Termostat kapalı. Sıcaklık ayarı pasif.');
+    }
+
+    // Otomatik mod işlevi
+    function enableAutoMode() {
+        // Otomatik modda sıcaklık ayarı (örneğin, 22°C)
+        setTemp = 22; // Örnek bir değer
+        updateThermostatUI();
+        alert('Otomatik mod aktif. Sıcaklık otomatik ayarlanıyor.');
+    }
+
+    // Isıtma mod işlevi
+    function setHeatingMode() {
+        // Isıtma modunda sıcaklık 30°C'ye ayarlansın
+        setTemp = 30;
+        updateThermostatUI();
+        alert('Isıtma modu aktif. Sıcaklık 30°C\'ye ayarlandı.');
+    }
+});
+    </script>
+    <script>
+        // Modal ile ilgili elemanlar
+        const openModalBtn = document.getElementById('openModalBtn');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const closeBtn = document.getElementById('closeBtn');
+
+        // Modal açma
+        openModalBtn.addEventListener('click', () => {
+            modalOverlay.style.display = 'block';
+        });
+
+        // Modal kapatma (X butonu)
+        closeBtn.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+
+
+    </script>
+
+
+
+    <script>
+
+        window.onload = function () {
+            console.log(setTemp);
+            document.getElementById('tempValue').innerHTML = setTemp;
+        };
+
+
+        // Temel değişkenler
+        var currentTemp = parseFloat(document.getElementById('currentTemp').textContent.trim());
+        var tempValue = parseFloat(document.getElementById('tempValue').textContent.trim());
+
+
+
+        var setTemp = tempValue;
+
+        const minTemp = 10;
+        const maxTemp = 50;       // Biraz geniş tuttuk
+
+        const circleBg = document.getElementById('circleBg');
+        const thermostat = document.getElementById('thermostat')
+        const statusText = document.getElementById('statusText');
+        const minusBtn = document.getElementById('minusBtn');
+        const plusBtn = document.getElementById('plusBtn');
+        const thermometer = document.getElementById('thermometer');
+        const thermometerFill = document.getElementById('thermometerFill');
+        const thermometerScale = document.getElementById('thermometerScale');
+
+        // ---------------------------
+        //  Derece Çizgilerini Ekleyelim (10° aralıkla)
+        // ---------------------------
+        function createScaleTicks() {
+            for (let t = minTemp; t <= maxTemp; t += 5) {
+                let ratio = (t - minTemp) / (maxTemp - minTemp);
+                let yPos = (1 - ratio) * 250; // 250px yüksek termometre
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                tick.style.top = yPos + 'px';
+                thermometerScale.appendChild(tick);
+
+                const label = document.createElement('div');
+                label.className = 'tick-label';
+                label.textContent = t + '°C';
+                label.style.top = yPos + 'px';
+                thermometerScale.appendChild(label);
+            }
+        }
+        createScaleTicks();
+
+        // ---------------------------
+        //  Termostat UI Güncellemesi
+        // ---------------------------
+        function updateThermostatUI() {
+            // UI'da set sıcaklık güncelle
+            tempValue.textContent = setTemp.toFixed(1);
+
+            // Durum yazısı (currentTemp < setTemp ise Isıtılıyor, aksi halde Boşta)
+            if (currentTemp < setTemp) {
+                statusText.textContent = 'Isıtılıyor';
+                statusText.style.color = '#ff6d00';
+            } else {
+                statusText.textContent = 'Boşta';
+                statusText.style.color = '#666';
+            }
+
+            // Daire içindeki renk değişimi
+            const totalRange = maxTemp - minTemp;
+            const ratio = (setTemp - minTemp) / totalRange;
+            const filledAngle = ((setTemp - minTemp) / totalRange) * 360;
+
+            // Termometre dolum seviyesi
+            thermometerFill.style.height = (ratio * 100) + '%';
+
+            // Isıtma/Soğutma Renk Geçişi:
+            if (setTemp > currentTemp) {
+                let heatRatio = (setTemp - currentTemp) / (maxTemp - currentTemp);
+                if (heatRatio > 1) heatRatio = 1;
+
+                // Isıtma için renk
+                const heatingColor = `hsl(${15 - 15 * heatRatio}, 100%, 50%)`;
+                thermometerFill.style.backgroundColor = heatingColor;
+                thermostat.style.background = `conic-gradient(
+                ${heatingColor} 0deg,
+                ${heatingColor} ${filledAngle}deg,
+                #ddd ${filledAngle}deg,
+                #ddd 360deg
+                )`;
+            } else if (setTemp < currentTemp) {
+                let coolRatio = (currentTemp - setTemp) / (currentTemp - minTemp);
+                if (coolRatio > 1) coolRatio = 1;
+
+                // Soğutma için renk
+                const coolingColor = `hsl(${200 + 20 * coolRatio}, 100%, 50%)`;
+                thermometerFill.style.backgroundColor = coolingColor;
+                thermostat.style.background = `conic-gradient(
+                ${coolingColor} 0deg,
+                ${coolingColor} ${filledAngle}deg,
+                #ddd ${filledAngle}deg,
+                #ddd 360deg
+                )`;
+
+            } else {
+                thermometerFill.style.backgroundColor = '#ff6d00';
+                thermostat.style.background = `conic-gradient(
+                #ff6d00 0deg,
+                #ff6d00 ${filledAngle}deg,
+                #ddd ${filledAngle}deg,
+                #ddd 360deg
+                )`;
+            }
+        }
+
+
+        // ---------------------------
+        //     Buton Olayları
+        // ---------------------------
+        minusBtn.addEventListener('click', () => {
+            setTemp -= 0.5;
+            if (setTemp < minTemp) setTemp = minTemp;
+            console.log(setTemp);
+            document.getElementById('tempValue').innerHTML = setTemp;
+            updateThermostatUI();
+        });
+        plusBtn.addEventListener('click', () => {
+            setTemp += 0.5;
+            if (setTemp > maxTemp) setTemp = maxTemp;
+            console.log(setTemp);
+            document.getElementById('tempValue').innerHTML = setTemp;
+
+            updateThermostatUI();
+
+        });
+
+        // ---------------------------
+        //    Termometre Olayları (Sürükleme)
+        // ---------------------------
+        let isDragging = false;
+        thermometer.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            updateThermometer(e);
+        });
+        thermometer.addEventListener('pointermove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                updateThermometer(e);
+            }
+        });
+        thermometer.addEventListener('pointerup', () => isDragging = false);
+        thermometer.addEventListener('pointerleave', () => isDragging = false);
+
+        function updateThermometer(e) {
+            const rect = thermometer.getBoundingClientRect();
+            let offsetY = e.clientY - rect.top;
+            if (offsetY < 0) offsetY = 0;
+            if (offsetY > rect.height) offsetY = rect.height;
+            let percent = 1 - (offsetY / rect.height);
+            let newTemp = minTemp + percent * (maxTemp - minTemp);
+            newTemp = Math.round(newTemp * 2) / 2;
+            setTemp = newTemp;
+
+            // Sıcaklık değerini HTML üzerinde güncelle
+            document.getElementById('tempValue').textContent = setTemp.toFixed(1);
+
+            // Termostat UI'ını güncelle
+            updateThermostatUI();
+        }
+        // Başlangıçta mevcut sıcaklıkla başlasın
+        setTemp = currentTemp;
+        updateThermostatUI();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.dropdown-button').click(function () {
+                $(this).next('.dropdown-menu').toggle();
+            });
+
+            $('.dropdown-menu button').click(function () {
+                var selectedText = $(this).html();
+                $(this).closest('.dropdown').find('.dropdown-button').html(selectedText);
+                $(this).siblings().removeClass('selected');
+                $(this).addClass('selected');
+                $(this).parent().hide();
+            });
+
+            $(document).click(function (event) {
+                if (!$(event.target).closest('.dropdown').length) {
+                    $('.dropdown-menu').hide();
+                }
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kalıcı Pomodoro Timer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .timer {
+            font-size: 64px;
+            text-align: center;
+            margin: 30px 0;
+            color: #222;
+            user-select: none;
+        }
+
+        .controls,
+        .session-config,
+        .mode-select {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 180px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .start {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .stop {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .reset {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .mode-btn {
+            background-color: #2563eb;
+            color: white;
+            border-radius: 20px;
+        }
+
+        .mode-btn.selected {
+            background-color: #1d4ed8;
+        }
+
+        .task-list,
+        .report-section {
+            margin-top: 30px;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9f9f9;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .task-item:hover {
+            background-color: #e9f0ff;
+            transform: scale(1.01);
+        }
+
+        .task-item.selected {
+            background-color: #dbeafe;
+        }
+
+        .task-name {
+            font-weight: bold;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 5px 10px;
+            margin-left: 5px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        .edit-btn:hover,
+        .delete-btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Kalıcı Pomodoro Timer</h1>
+
+        <div class="session-config">
+            <label>Work (min):
+                <input type="number" id="workDuration" min="1" max="120" />
+            </label>
+            <label>Short Break (min):
+                <input type="number" id="shortBreak" min="1" max="30" />
+            </label>
+            <label>Long Break (min):
+                <input type="number" id="longBreak" min="1" max="60" />
+            </label>
+        </div>
+
+        <div class="mode-select">
+            <button class="mode-btn selected" id="workModeBtn">Work</button>
+            <button class="mode-btn" id="shortBreakModeBtn">Short Break</button>
+            <button class="mode-btn" id="longBreakModeBtn">Long Break</button>
+        </div>
+
+        <div class="timer" id="timer">25:00</div>
+        <div class="active-task" id="activeTask"></div>
+
+        <div class="controls">
+            <button class="start" id="startBtn">Start</button>
+            <button class="stop" id="stopBtn">Stop</button>
+            <button class="reset" id="resetBtn">Reset</button>
+        </div>
+
+        <div class="task-list">
+            <input type="text" id="newTask" placeholder="Add a new task..." />
+            <button id="addTaskBtn">Add Task</button>
+            <div id="tasks"></div>
+        </div>
+
+        <div class="report-section">
+            <button id="downloadReportBtn">Download Report</button>
+        </div>
+    </div>
+
+
+    <audio id="beep" src="finish.mp3" preload="auto"></audio>
+
+    <script>
+        // Elements
+        const timerEl = document.getElementById('timer');
+        const activeTaskEl = document.getElementById('activeTask');
+        const workInput = document.getElementById('workDuration');
+        const shortBreakInput = document.getElementById('shortBreak');
+        const longBreakInput = document.getElementById('longBreak');
+        const tasksContainer = document.getElementById('tasks');
+        const newTaskInput = document.getElementById('newTask');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const downloadReportBtn = document.getElementById('downloadReportBtn');
+        const beep = document.getElementById('beep');
+
+        const workModeBtn = document.getElementById('workModeBtn');
+        const shortBreakModeBtn = document.getElementById('shortBreakModeBtn');
+        const longBreakModeBtn = document.getElementById('longBreakModeBtn');
+
+        // State
+        let timer = null;
+        let secondsLeft = 0;
+        let mode = 'work'; // work, short, long
+        let sessionCount = 0;
+        let currentTask = null;
+        let taskStats = {}; // { taskName: pomodoroCount }
+        let tasks = [];
+
+        // Load from localStorage
+        function loadState() {
+            const savedTasks = localStorage.getItem('tasks');
+            const savedStats = localStorage.getItem('taskStats');
+            const savedCurrentTask = localStorage.getItem('currentTask');
+            const savedSessionCount = localStorage.getItem('sessionCount');
+            const savedDurations = localStorage.getItem('durations');
+
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+            }
+
+            if (savedStats) {
+                taskStats = JSON.parse(savedStats);
+            }
+
+            if (savedCurrentTask) {
+                currentTask = savedCurrentTask;
+            }
+
+            if (savedSessionCount) {
+                sessionCount = Number(savedSessionCount);
+            }
+
+            if (savedDurations) {
+                const d = JSON.parse(savedDurations);
+                workInput.value = d.work;
+                shortBreakInput.value = d.shortBreak;
+                longBreakInput.value = d.longBreak;
+            } else {
+                // Default values
+                workInput.value = 25;
+                shortBreakInput.value = 5;
+                longBreakInput.value = 15;
+            }
+        }
+
+        // Save to localStorage
+        function saveState() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('taskStats', JSON.stringify(taskStats));
+            localStorage.setItem('currentTask', currentTask);
+            localStorage.setItem('sessionCount', sessionCount.toString());
+            localStorage.setItem('durations', JSON.stringify({
+                work: Number(workInput.value),
+                shortBreak: Number(shortBreakInput.value),
+                longBreak: Number(longBreakInput.value)
+            }));
+        }
+
+        // Render tasks list
+        function renderTasks() {
+            tasksContainer.innerHTML = '';
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'task-item' + (task === currentTask ? ' selected' : '');
+
+                const taskNameSpan = document.createElement('span');
+                taskNameSpan.textContent = task + ' (Done: ' + (taskStats[task] || 0) + ')';
+                taskNameSpan.style.flexGrow = '1';
+                taskNameSpan.style.userSelect = 'text';
+
+                div.appendChild(taskNameSpan);
+
+                // Edit button
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'edit-btn';
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = task;
+                    input.style.flexGrow = '1';
+                    div.replaceChild(input, taskNameSpan);
+                    input.focus();
+
+                    function saveEdit() {
+                        const newName = input.value.trim();
+                        if (newName && newName !== task && !tasks.includes(newName)) {
+                            const idx = tasks.indexOf(task);
+                            tasks[idx] = newName;
+
+                            taskStats[newName] = taskStats[task] || 0;
+                            delete taskStats[task];
+
+                            if (currentTask === task) currentTask = newName;
+
+                            saveState();
+                            renderTasks();
+                            updateActiveTask();
+                        } else {
+                            renderTasks();
+                        }
+                    }
+
+                    input.onblur = saveEdit;
+                    input.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            input.blur();
+                        } else if (e.key === 'Escape') {
+                            renderTasks();
+                        }
+                    };
+                };
+
+                // Delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`"${task}" görevini silmek istediğine emin misin?`)) {
+                        const idx = tasks.indexOf(task);
+                        if (idx > -1) tasks.splice(idx, 1);
+                        delete taskStats[task];
+                        if (currentTask === task) currentTask = null;
+                        saveState();
+                        renderTasks();
+                        updateActiveTask();
+                    }
+                };
+
+                div.appendChild(editBtn);
+                div.appendChild(deleteBtn);
+
+                // Select task on div click
+                div.onclick = () => {
+                    currentTask = task;
+                    sessionCount = 0;
+                    setMode('work');
+                    renderTasks();
+                    updateActiveTask();
+                    saveState();
+                };
+
+                tasksContainer.appendChild(div);
+            });
+        }
+
+        // Update active task display
+        function updateActiveTask() {
+            activeTaskEl.textContent = currentTask ? `Current Task: ${currentTask}` : '';
+        }
+
+        // Format seconds to MM:SS
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // Set mode and reset timer
+        function setMode(newMode) {
+            mode = newMode;
+            // Update mode button highlight
+            [workModeBtn, shortBreakModeBtn, longBreakModeBtn].forEach(btn => btn.classList.remove('selected'));
+            if (mode === 'work') workModeBtn.classList.add('selected');
+            else if (mode === 'short') shortBreakModeBtn.classList.add('selected');
+            else if (mode === 'long') longBreakModeBtn.classList.add('selected');
+
+            let duration = 0;
+            if (mode === 'work') duration = Number(workInput.value) * 60;
+            else if (mode === 'short') duration = Number(shortBreakInput.value) * 60;
+            else if (mode === 'long') duration = Number(longBreakInput.value) * 60;
+            secondsLeft = duration;
+            updateTimerDisplay();
+            saveState();
+            stopTimer(); // mode değişince timer durur, başlatma kullanıcıya kalır
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            timerEl.textContent = formatTime(secondsLeft);
+        }
+
+        // Timer tick
+        function timerTick() {
+            if (secondsLeft > 0) {
+                secondsLeft--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timer);
+                timer = null;
+                beep.play();
+
+                if (mode === 'work' && currentTask) {
+                    taskStats[currentTask] = (taskStats[currentTask] || 0) + 1;
+                    sessionCount++;
+                    saveState();
+                    renderTasks();
+
+                    if (sessionCount % 4 === 0) {
+                        setMode('long');
+                    } else {
+                        setMode('short');
+                    }
+                } else {
+                    setMode('work');
+                }
+            }
+        }
+
+        // Start timer
+        function startTimer() {
+            if (!currentTask) {
+                alert('Please select a task first!');
+                return;
+            }
+            if (!timer) {
+                timer = setInterval(timerTick, 1000);
+            }
+        }
+
+        // Stop timer
+        function stopTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        // Reset timer
+        function resetTimer() {
+            stopTimer();
+            setMode(mode);
+        }
+
+        // Add new task
+        function addTask() {
+            const taskName = newTaskInput.value.trim();
+            if (!taskName) return;
+            if (!tasks.includes(taskName)) {
+                tasks.push(taskName);
+                taskStats[taskName] = 0;
+                saveState();
+                renderTasks();
+                newTaskInput.value = '';
+            } else {
+                alert('This task already exists!');
+            }
+        }
+
+        // Download report
+        function downloadReport() {
+            let totalPomodoro = 0;
+            let totalMinutes = 0;
+            const workDuration = Number(workInput.value);
+
+            let report = `📊 Pomodoro Raporu - ${new Date().toLocaleString()}\n\n`;
+
+            for (const task in taskStats) {
+                const count = taskStats[task];
+                const minutes = count * workDuration;
+                totalPomodoro += count;
+                totalMinutes += minutes;
+                report += `${task}: ${count} pomodoro (${minutes} dakika)\n`;
+            }
+
+            report += `\nToplam Pomodoro: ${totalPomodoro}\nToplam Çalışma Süresi: ${totalMinutes} dakika\n`;
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pomodoro_raporu_' + new Date().toISOString().slice(0, 10) + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Event Listeners
+        addTaskBtn.onclick = addTask;
+        startBtn.onclick = startTimer;
+        stopBtn.onclick = stopTimer;
+        resetBtn.onclick = resetTimer;
+        downloadReportBtn.onclick = downloadReport;
+
+        workModeBtn.onclick = () => setMode('work');
+        shortBreakModeBtn.onclick = () => setMode('short');
+        longBreakModeBtn.onclick = () => setMode('long');
+
+        // Update durations when inputs change
+        [workInput, shortBreakInput, longBreakInput].forEach(input => {
+            input.addEventListener('change', () => {
+                setMode(mode); // mevcut moda göre süreyi yenile
+                saveState();
+            });
+        });
+
+        // Initialize
+        loadState();
+        renderTasks();
+        updateActiveTask();
+        setMode('work');
+    </script>
+</body>
+
+</html>
