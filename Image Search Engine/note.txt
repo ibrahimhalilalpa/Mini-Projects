@@ -1,0 +1,280 @@
+HTML
+------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Sayfanın karakter kodlamasını UTF-8 olarak ayarlar. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Sayfanın genişliğini cihazın genişliğine göre ayarlayarak mobil uyumlu hale getirir. -->
+    <title>Image Search Engine</title>
+    <!-- Sayfanın başlığını belirler. -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Sayfaya CSS dosyasını bağlar. -->
+</head>
+<body>
+    <!-- Sayfanın gövde kısmı başlar. -->
+    <h1>Image Search Engine</h1>
+    <!-- Sayfanın ana başlığını belirler. -->
+    <form id="search-form">
+        <!-- Arama formunu oluşturur ve ID'sini "search-form" olarak ayarlar. -->
+        <input type="text" id="search-box" placeholder="Search Anything...">
+        <!-- Arama kutusunu oluşturur ve ID'sini "search-box" olarak ayarlar. Kullanıcıdan girdi alır. -->
+        <button type="submit" id="search-button">Search</button>
+        <!-- Arama butonunu oluşturur ve ID'sini "search-button" olarak ayarlar. Formu gönderir. -->
+    </form>
+    <div id="search-result"></div>
+    <!-- Arama sonuçlarının gösterileceği alanı oluşturur ve ID'sini "search-result" olarak ayarlar. -->
+    <button id="show-more-btn">More</button>
+    <!-- Daha fazla sonuç göstermek için kullanılacak butonu oluşturur ve ID'sini "show-more-btn" olarak ayarlar. -->
+    <script src="script.js"></script>
+    <!-- JavaScript dosyasını bağlar. -->
+</body>
+</html>
+
+##############################################################################################################################################################################
+CSS
+--------------
+* {
+    margin: 0;
+    /* Tüm öğelerin varsayılan dış boşluğunu sıfırlar. */
+    padding: 0;
+    /* Tüm öğelerin varsayılan iç boşluğunu sıfırlar. */
+    font-family: 'Poppins', sans-serif;
+    /* Tüm öğelere 'Poppins' yazı tipini uygular, bu yazı tipi mevcut değilse sans-serif kullanılır. */
+    box-sizing: border-box;
+    /* Tüm öğelerde box modelini border-box olarak ayarlar, bu sayede padding ve border öğenin toplam genişliğine ve yüksekliğine dahil edilir. */
+}
+
+body {
+    background-color: #39297b;
+    /* Sayfanın arka plan rengini koyu mor olarak ayarlar. */
+    color: #fff;
+    /* Sayfadaki metinlerin rengini beyaz yapar. */
+}
+
+h1 {
+    text-align: center;
+    /* H1 başlığını yatay olarak ortalar. */
+    margin: 100px auto 50px;
+    /* H1 başlığının üstten 100px, alttan 50px, sağdan ve soldan otomatik boşluk bırakmasını sağlar. */
+    font-weight: 600;
+    /* H1 başlığının yazı kalınlığını 600 olarak ayarlar (yarı kalın). */
+}
+
+form {
+    width: 90%;
+    /* Formun genişliğini %90 olarak ayarlar. */
+    max-width: 600px;
+    /* Formun maksimum genişliğini 600px olarak ayarlar. */
+    margin: auto;
+    /* Formu yatay olarak ortalar. */
+    height: 80px;
+    /* Formun yüksekliğini 80px olarak ayarlar. */
+    background-color: #434989;
+    /* Formun arka plan rengini koyu mavi yapar. */
+    display: flex;
+    /* Formun içeriğini yatay olarak düzenler. */
+    align-items: center;
+    /* Formun içeriğini dikey olarak ortalar. */
+    border-radius: 8px;
+    /* Formun köşelerini 8px yuvarlatır. */
+}
+
+form input {
+    flex: 1;
+    /* Giriş kutusunun esnek olmasını ve formun geri kalanını kaplamasını sağlar. */
+    height: 100%;
+    /* Giriş kutusunun yüksekliğini formun yüksekliği ile aynı yapar. */
+    border: 0;
+    /* Giriş kutusunun kenarlığını kaldırır. */
+    outline: 0;
+    /* Giriş kutusunun dış kenarlığını kaldırır. */
+    background-color: transparent;
+    /* Giriş kutusunun arka planını şeffaf yapar. */
+    color: #fff;
+    /* Giriş kutusundaki metinlerin rengini beyaz yapar. */
+    font-size: 18px;
+    /* Giriş kutusundaki metinlerin boyutunu 18px yapar. */
+    padding: 0 30px;
+    /* Giriş kutusunun sağ ve sol iç boşluğunu 30px yapar. */
+}
+
+form button {
+    padding: 0 40px;
+    /* Butonun sağ ve sol iç boşluğunu 40px yapar. */
+    height: 100%;
+    /* Butonun yüksekliğini formun yüksekliği ile aynı yapar. */
+    background-color: #ff3929;
+    /* Butonun arka plan rengini kırmızı yapar. */
+    color: #fff;
+    /* Butonun metin rengini beyaz yapar. */
+    font-size: 18px;
+    /* Butonun metin boyutunu 18px yapar. */
+    border: 0;
+    /* Butonun kenarlığını kaldırır. */
+    outline: 0;
+    /* Butonun dış kenarlığını kaldırır. */
+    border-top-right-radius: 8px;
+    /* Butonun sağ üst köşesini 8px yuvarlatır. */
+    border-top-left-radius: 8px;
+    /* Butonun sol üst köşesini 8px yuvarlatır. */
+    cursor: pointer;
+    /* Butonun üzerine gelindiğinde fare imlecinin el işaretine dönüşmesini sağlar. */
+}
+
+::placeholder {
+    color: #fff;
+    /* Placeholder metin rengini beyaz yapar. */
+    font-size: 18px;
+    /* Placeholder metin boyutunu 18px yapar. */
+}
+
+#show-more-btn {
+    background-color: #ff3929;
+    /* Daha fazla göster butonunun arka plan rengini kırmızı yapar. */
+    color: #fff;
+    /* Daha fazla göster butonunun metin rengini beyaz yapar. */
+    border: 0;
+    /* Daha fazla göster butonunun kenarlığını kaldırır. */
+    outline: 0;
+    /* Daha fazla göster butonunun dış kenarlığını kaldırır. */
+    padding: 10px 20px;
+    /* Daha fazla göster butonunun iç boşluğunu 10px üstten ve alttan, 20px sağdan ve soldan yapar. */
+    border-radius: 4px;
+    /* Daha fazla göster butonunun köşelerini 4px yuvarlatır. */
+    margin: 10px auto 100px;
+    /* Daha fazla göster butonunun üstten 10px, sağdan ve soldan otomatik, alttan 100px boşluk bırakmasını sağlar. */
+    display: none;
+    /* Daha fazla göster butonunu başlangıçta gizler. */
+    cursor: pointer;
+    /* Butonun üzerine gelindiğinde fare imlecinin el işaretine dönüşmesini sağlar. */
+}
+
+#search-result {
+    width: 80%;
+    /* Arama sonuçları div'inin genişliğini %80 yapar. */
+    margin: 100px auto 50px;
+    /* Arama sonuçları div'inin üstten 100px, sağdan ve soldan otomatik, alttan 50px boşluk bırakmasını sağlar. */
+    display: grid;
+    /* Arama sonuçları div'ini grid düzeninde gösterir. */
+    grid-template-columns: 1fr 1fr 1fr;
+    /* Arama sonuçları div'inde 3 sütun oluşturur. */
+    grid-gap: 40px;
+    /* Grid öğeleri arasında 40px boşluk bırakır. */
+}
+
+#search-result img {
+    width: 100%;
+    /* Resimlerin genişliğini %100 yapar. */
+    height: 300px;
+    /* Resimlerin yüksekliğini 300px yapar. */
+    object-fit: cover;
+    /* Resimleri, oranlarını koruyarak kapsayıcı öğeye sığacak şekilde ayarlar. */
+    border-radius: 5px;
+    /* Resimlerin köşelerini 5px yuvarlatır. */
+}
+
+##############################################################################################################################################################################
+const accessKey = "-1waqsiIxbBBRm2zvnxCFDg7u5sKHbP0TFCLfaAp6hk";
+/* Unsplash API erişim anahtarını tanımlar. */
+
+const searchForm = document.getElementById("search-form");
+/* HTML'deki arama formunu seçer. */
+
+const searchBox = document.getElementById("search-box");
+/* HTML'deki arama kutusunu seçer. */
+
+const searchResult = document.getElementById("search-result");
+/* HTML'deki arama sonuçlarını görüntülemek için kullanılacak div'i seçer. */
+
+const showMoreBtn = document.getElementById("show-more-btn");
+/* HTML'deki 'Daha Fazla Göster' butonunu seçer. */
+
+let keyword = "";
+/* Arama anahtar kelimesi için boş bir değişken tanımlar. */
+
+let page = 1;
+/* Arama sonuçları için başlangıç sayfa numarasını 1 olarak ayarlar. */
+
+async function searchImages() {
+    keyword = searchBox.value;
+    /* Arama kutusundaki değeri keyword değişkenine atar. */
+    
+    const url = `https://api.unsplash.com/search/photos?page=${page}&query=${keyword}&client_id=${accessKey}&per_page=12`;
+    /* Unsplash API'sine yapılacak arama isteğinin URL'sini oluşturur. Arama sonuçlarını 12 fotoğrafla sınırlar. */
+    
+    const response = await fetch(url);
+    /* URL'yi kullanarak API'ye bir istek gönderir ve yanıtını bekler. */
+    
+    const data = await response.json();
+    /* Yanıtı JSON formatında alır ve data değişkenine atar. */
+    
+    if (page === 1) {
+        searchResult.innerHTML = "";
+        /* Eğer sayfa numarası 1 ise, arama sonuçlarını temizler. */
+    }
+    
+    const results = data.results;
+    /* API'den gelen sonuçları results değişkenine atar. */
+    
+    results.map((result) => {
+        const image = document.createElement("img");
+        /* Yeni bir img elementi oluşturur. */
+        
+        image.src = result.urls.small;
+        /* img elementinin src özelliğini API'den gelen küçük boyutlu resim URL'si ile ayarlar. */
+        
+        const imageLink = document.createElement("a");
+        /* Yeni bir a (anchor) elementi oluşturur. */
+        
+        imageLink.href = result.links.html;
+        /* a elementinin href özelliğini API'den gelen resim sayfası URL'si ile ayarlar. */
+        
+        imageLink.target = "_blank";
+        /* a elementini yeni bir sekmede açılacak şekilde ayarlar. */
+        
+        imageLink.appendChild(image);
+        /* img elementini a elementinin içine yerleştirir. */
+        
+        searchResult.appendChild(imageLink);
+        /* a elementini searchResult div'inin içine yerleştirir. */
+    });
+    
+    showMoreBtn.style.display = "block";
+    /* 'Daha Fazla Göster' butonunu görünür hale getirir. */
+}
+
+searchForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    /* Formun varsayılan davranışını (sayfanın yeniden yüklenmesini) engeller. */
+    
+    page = 1;
+    /* Sayfa numarasını 1 olarak ayarlar. */
+    
+    searchImages();
+    /* searchImages fonksiyonunu çağırır. */
+});
+
+showMoreBtn.addEventListener("click", () => {
+    page++;
+    /* Sayfa numarasını 1 artırır. */
+    
+    searchImages();
+    /* searchImages fonksiyonunu tekrar çağırır. */
+});
+
+##############################################################################################################################################################################
+API
+---
+
+https://api.unsplash.com/search/photos?page=1&query=office&client_id=-1waqsiIxbBBRm2zvnxCFDg7u5sKHbP0TFCLfaAp6hk
+
+https://unsplash.com/
+
+https://unsplash.com/documentation#search-photos
+
+https://unsplash.com/oauth/applications
+
+https://unsplash.com/oauth/applications/636495
+

@@ -1,0 +1,144 @@
+==================        CSS        ====================
+
+/* Google Fonts'tan Playfair Display fontunu içe aktarıyor. */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap');
+
+/* Tüm elementlerin varsayılan margin ve padding değerlerini sıfırlıyor, font ve box-sizing ayarlarını yapıyor. */
+* {
+    margin: 0; /* Tüm elementlerin dış boşluğunu sıfırlar. */
+    padding: 0; /* Tüm elementlerin iç boşluğunu sıfırlar. */
+    font-family: 'Playfair Display', serif; /* Tüm elementlerde 'Playfair Display' fontunu kullanır. */
+    box-sizing: border-box; /* Border ve padding'in genişlik ve yükseklik hesaplamasına dahil edilmesini sağlar. */
+}
+
+/* Body'nin arka plan rengini belirliyor. */
+body {
+    background-color: #bbc6fa; /* Arka plan rengi lavanta mavi tonunda. */
+}
+
+/* Alıntı kutusunun stilini ayarlıyor. */
+.quote-box {
+    background-color: #fff; /* Alıntı kutusunun arka plan rengi beyaz. */
+    width: 700px; /* Alıntı kutusunun genişliği 700 piksel. */
+    /* Kutuyu ortalamak için kullanılıyor. */
+    position: absolute; /* Kutunun konumlandırılmasını sağlar. */
+    top: 50%; /* Kutuyu dikey olarak ortalar. */
+    left: 50%; /* Kutuyu yatay olarak ortalar. */
+    transform: translate(-50%, -50%); /* Kutunun tam ortalanması için, kendisinin yarısı kadar kaydırır. */
+    
+    padding: 40px; /* İç boşluk (padding) ayarı. */
+    border-radius: 10px; /* Kenarların yuvarlatılması için. */
+    text-align: center; /* Metni ortalar. */
+    box-shadow: 0px 10px 20px 0px rgba(0,0,0,0.15); /* Gölgelendirme efekti ekler. */
+}
+
+/* Alıntı kutusunun başlık stilini ayarlıyor. */
+.quote-box h2 {
+    font-size: 32px; /* Başlığın font boyutunu 32 piksel yapar. */
+    margin-bottom: 40px; /* Başlığın altındaki boşluk. */
+    position: relative; /* Alt öğeleri konumlandırmak için relative ayarı. */
+}
+
+/* Başlık altına çizgi ekler. */
+.quote-box h2::after {
+    content: ''; /* İçeriği boş bir dize olarak ayarlar. */
+    width: 75px; /* Çizginin genişliği. */
+    height: 3px; /* Çizginin yüksekliği. */
+    border-radius: 3px; /* Çizginin köşelerini yuvarlar. */
+    background: rgb(23, 124, 229); /* Çizginin rengi mavi tonlarında. */
+    /* Çizgiyi yatay olarak ortalar. */
+    position: absolute; /* Çizginin konumunu belirler. */
+    bottom: -10px; /* Başlığın hemen altına yerleştirir. */
+    left: 50%; /* Yatayda ortalar. */
+    transform: translateX(-50%); /* Kendi genişliği kadar sola kaydırarak tam ortalar. */
+}
+
+/* Alıntı metninin stilini ayarlıyor. */
+.quote-box blockquote {
+    font-size: 26px; /* Alıntı metninin font boyutu. */
+    min-height: 110px; /* Minimum yükseklik ayarı. */
+}
+
+/* Alıntı metninin başına ve sonuna tırnak işareti ekler. */
+.quote-box blockquote::before,
+.quote-box blockquote::after {
+    content: '"'; /* İçeriği tırnak işareti olarak ayarlar. */
+}
+
+/* Yazar adının stilini ayarlıyor. */
+.quote-box span {
+    display: block; /* Yazar adını blok seviyesinde gösterir. */
+    margin-top: 10px; /* Üstten boşluk ekler. */
+    float: right; /* Sağ tarafa yaslar. */
+    position: relative; /* İçerik konumlandırma için ayar. */
+}
+
+/* Alıntı kutusundaki butonların yerleşimini ayarlıyor. */
+.quote-box div {
+    width: 100%; /* Div'in genişliği %100 olacak şekilde ayarlanır. */
+    margin-top: 50px; /* Üstten boşluk ekler. */
+    display: flex; /* Flexbox düzenini kullanır. */
+    justify-content: center; /* İçeriği yatay olarak ortalar. */
+}
+
+/* Alıntı kutusundaki butonların stilini ayarlıyor. */
+.quote-box button {
+    background-color: rgb(23, 124, 229); /* Buton arka plan rengi. */
+    color: #fff; /* Buton üzerindeki yazının rengi beyaz. */
+    border: 1px solid rgb(23, 124, 229); /* Kenarlık rengi mavi. */
+    width: 150px; /* Buton genişliği. */
+    height: 50px; /* Buton yüksekliği. */
+    border-radius: 25px; /* Buton köşelerini yuvarlar. */
+    display: flex; /* Buton içeriğini flexbox düzeniyle gösterir. */
+    align-items: center; /* Dikey olarak ortalar. */
+    justify-content: center; /* Yatay olarak ortalar. */
+    margin: 5px; /* Butonlar arasında boşluk. */
+    cursor: pointer; /* Fare ile üzerine gelindiğinde imleci değiştirir. */
+}
+
+/* Buton içindeki resimlerin stilini ayarlıyor. */
+.quote-box button img {
+    width: 40px; /* Resmin genişliği. */
+    height: auto; /* Yüksekliği otomatik olarak ayarlar. */
+    margin-right: 10px; /* Resmin sağında boşluk bırakır. */
+}
+
+/* İkinci butonun stilini ayarlıyor. */
+.quote-box button:nth-child(2) {
+    background-color: black; /* İkinci butonun arka plan rengi siyah. */
+}
+
+
+
+
+====================================== Javascript ===================================
+
+// HTML'deki 'quote' ve 'author' elementlerini alır.
+const quote = document.getElementById("quote"); // Alıntı metninin yerleştirileceği element
+const author = document.getElementById("author"); // Yazar adının yerleştirileceği element
+
+// Rastgele alıntı sağlayan API'nin URL'si
+const api_url = "https://api.quotable.io/random";
+
+// Asenkron bir fonksiyon tanımlıyor; belirtilen URL'den alıntı alıyor.
+async function getquote(url) {
+    // URL'ye GET isteği yapar
+    const response = await fetch(url);
+    // Gelen yanıtı JSON formatında alır
+    var data = await response.json();
+    // console.log(data); // Yanıtı konsola yazdırmak için; (geliştirme aşamasında kullanılabilir)
+    // Alıntı ve yazar adını HTML elementlerine yerleştirir.
+    quote.innerHTML = data.content; // Alıntı metnini yerleştirir
+    author.innerHTML = data.author; // Yazar adını yerleştirir
+}
+
+// getquote fonksiyonu, belirli bir URL ile çağrılır ve alıntıyı alır
+getquote(api_url);
+
+// Tweet atmak için fonksiyon
+function tweet() {
+    // Twitter'a tweet atma URL'si oluşturur
+    window.open("https://x.com/intent/tweet?text=" + quote.innerHTML +
+    "  - by " + author.innerHTML, "Tweet Window",
+    "width=600, height=300"); // Yeni pencerede açar
+}

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Belgenin karakter kodlamasını UTF-8 olarak ayarlar. -->
+    <meta charset="UTF-8">
+    <!-- Cihazın genişliğine göre sayfanın boyutunu ayarlar ve ölçeklendirmeyi 1.0 yapar. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Belgenin başlık etiketini ayarlar. -->
+    <title>Coming Soon Page</title>
+    <!-- Harici stil sayfasını bağlar. -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ana kapsayıcı div. -->
+    <div class="container">
+        <!-- Logo resmi. -->
+        <img src="images/e a r t h.jpg" class="logo">
+    </div>
+
+    <!-- İçerik div'i. -->
+    <div class="content">
+        <!-- Bakım bildirim yazısı. -->
+        <p>Website Is Under Maintenance</p>
+        <!-- Başlık. -->
+        <h1>We are <span>Launching</span> Soon</h1>
+
+        <!-- Geri sayım alanı. -->
+        <div class="launch-time">
+            <!-- Gün geri sayım div'i. -->
+            <div>
+                <p id="days">00</p>
+                <span>Days</span>
+            </div>
+            <!-- Saat geri sayım div'i. -->
+            <div>
+                <p id="hours">00</p>
+                <span>Hours</span>
+            </div>
+            <!-- Dakika geri sayım div'i. -->
+            <div>
+                <p id="minutes">00</p>
+                <span>Minutes</span>
+            </div>
+            <!-- Saniye geri sayım div'i. -->
+            <div>
+                <p id="seconds">00</p>
+                <span>Seconds</span>
+            </div>
+        </div>
+
+        <!-- "Learn More" düğmesi. -->
+        <button type="button">Learn More <img src="images/e a r t h.jpg" alt=""></button>
+    </div>
+    <!-- Roket resmi. -->
+    <img src="images/rocket.png" class="rocket" alt="">
+
+    <!-- Harici JavaScript dosyasını bağlar. -->
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+---------------------------------------------------------------------------------
+/* Bu kural tüm HTML elemanları için geçerlidir. 
+   Varsayılan margin ve padding değerlerini kaldırarak öğeler arasındaki boşlukları sıfırlar.
+   Font ailesini Arial, Helvetica veya sans-serif olarak ayarlar.
+   box-sizing özelliğini border-box yaparak, padding ve border değerlerini elementin toplam genişliği ve yüksekliği içinde tutar. */
+* {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+}
+
+/* .container sınıfı, sayfanın tamamını kaplayacak şekilde genişlik ve yükseklik ayarlar.
+   Arka plan olarak "images/e a r t h.jpg" resmini kullanır, 
+   resmin konumunu merkeze hizalar ve sol ve sağdan %10 oranında iç boşluk (padding) ekler.
+   Bu, sayfanın ortasında içeriklerin düzgün bir şekilde yerleşmesini sağlar. */
+.container {
+    width: 100vw;
+    height: 100vh;
+    background-image: url("images/e a r t h.jpg");
+    background-position: center;
+    padding: 0 10%;
+}
+
+/* .logo sınıfı, logo resminin genişliğini 120 piksel yapar ve
+   üstten ve alttan 20 piksel boşluk (padding) ekler.
+   Bu, logonun belirli bir boyutta ve düzgünce yerleştirilmiş olmasını sağlar. */
+.logo {
+    width: 120px;
+    padding: 20px 0;
+}
+
+/* .content sınıfı, içeriğin sayfanın ortasında dikey olarak hizalanmasını sağlar.
+   Üstten %50 konumlandırarak ve translateY(-50%) kullanarak içeriği tam olarak ortalar.
+   Sol taraftan %2 margin ekleyerek içeriği biraz sağa kaydırır.
+   Metin rengini beyaz (#fff) yapar, böylece arka planda daha belirgin olur. */
+.content {
+    top: 50%;
+    margin-left: 2%;
+    position: absolute;
+    transform: translateY(-50%);
+    color: #fff;
+}
+
+/* .content sınıfı içindeki h1 elementi için yazı boyutunu 64 piksel ve yazı kalınlığını (font-weight) 600 yapar.
+   Bu, başlığın büyük ve dikkat çekici olmasını sağlar. */
+.content h1 {
+    font-size: 64px;
+    font-weight: 600;
+}
+
+/* .content sınıfı içindeki h1 elementi içindeki span elementi için yazı rengini kırmızı (#ff3753) yapar.
+   Bu, "Launching" kelimesini vurgulamak için kullanılır. */
+.content h1 span {
+    color: #ff3753;
+}
+
+/* .content sınıfı içindeki button elementleri için arka plan rengini transparan yapar,
+   beyaz (#fff) kenarlık ekler ve kenarlık genişliğini 2 piksel yapar.
+   Kenarlık ve outline'ı kaldırarak daha temiz bir görünüm sağlar.
+   12 piksel üstten ve alttan, 25 piksel sağdan ve soldan iç boşluk (padding) ekler.
+   Metin rengini beyaz (#fff) yapar ve içerikleri yatay ve dikey olarak ortalar.
+   30 piksel üstten boşluk (margin) ekler ve fare imlecini üzerine getirildiğinde tıklanabilir hale getirir. */
+.content button {
+    background-color: transparent;
+    border: 2px solid #fff;
+    outline: none;
+    padding: 12px 25px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    margin-top: 30px;
+    cursor: pointer;
+}
+
+/* .content sınıfı içindeki button elementlerinin içindeki img elementleri için genişliği 25 piksel yapar
+   ve sol taraftan 10 piksel boşluk (margin) ekler.
+   Bu, düğmedeki resmin düzgün bir şekilde yerleştirilmesini sağlar. */
+.content button img {
+    width: 25px;
+    margin-left: 10px;
+}
+
+/* .launch-time sınıfı, içindeki öğeleri yatay olarak hizalamak için flexbox düzenini kullanır.
+   Bu, geri sayım bölümlerinin yan yana düzgün bir şekilde yerleşmesini sağlar. */
+.launch-time {
+    display: flex;
+}
+
+/* .launch-time sınıfı içindeki div elementleri için her birinin genişlik temelini 100 piksel yapar.
+   Bu, her geri sayım bölümünün belirli bir genişlikte olmasını sağlar. */
+.launch-time div {
+    flex-basis: 100px;
+}
+
+/* .launch-time sınıfı içindeki div elementlerinin içindeki p elementleri için yazı boyutunu 60 piksel yapar
+   ve alt kenardan -14 piksel boşluk (margin) ekler.
+   Bu, büyük ve dikkat çekici geri sayım numaralarını sağlar ve numaraların alt kısmındaki boşluğu kaldırır. */
+.launch-time div p {
+    font-size: 60px;
+    margin-bottom: -14px;
+}
+
+/* .rocket sınıfı, roket resminin genişliğini 50 piksel yapar, 
+   konumunu sağdan 100 piksel ve alttan 0 piksel olarak ayarlar.
+   4 saniyelik lineer ve sonsuz tekrarlayan bir "rocket" animasyonu uygular.
+   Bu, roketin sürekli olarak yukarı doğru hareket etmesini sağlar. */
+.rocket {
+    width: 50px;
+    position: absolute;
+    right: 100px;
+    bottom: 0;
+    animation: rocket 4s linear infinite;
+}
+
+/* "rocket" anahtar kare (keyframes) animasyonu tanımlar.
+   Başlangıçta (0%) roket alt kenarda (bottom: 0) ve opaklığı 0 (görünmez) olur.
+   Bitişte (100%) roket üst kenardan %105 yukarıda (bottom: 105%) ve opaklığı 1 (görünür) olur.
+   Bu, roketin yavaşça yukarı doğru hareket etmesini ve kaybolmasını sağlar. */
+@keyframes rocket {
+    0% {
+        bottom: 0;
+        opacity: 0;
+    }
+    100% {
+        bottom: 105%;
+        opacity: 1;
+    }
+}
+
+
+--------------------------------------------------------------------------------------
+// countDownDate değişkeni, 19 Ağustos 2024, 00:00:00 tarihini milisaniye cinsinden temsil eder.
+var countDownDate = new Date("August 19, 2024 00:00:00").getTime();
+
+// setInterval fonksiyonu, belirtilen süre (1000 milisaniye) boyunca her bir saniyede bir çalışacak bir fonksiyon oluşturur.
+var x = setInterval(function() {
+
+    // now değişkeni, mevcut tarih ve saati milisaniye cinsinden temsil eder.
+    var now = new Date().getTime();
+
+    // distance değişkeni, hedef tarih (countDownDate) ile mevcut tarih (now) arasındaki farkı milisaniye cinsinden temsil eder.
+    var distance = countDownDate - now;
+
+    // days değişkeni, kalan gün sayısını hesaplar.
+    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+
+    // hours değişkeni, günün geri kalan saatlerini hesaplar.
+    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    // minutes değişkeni, saatin geri kalan dakikalarını hesaplar.
+    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+
+    // seconds değişkeni, dakikanın geri kalan saniyelerini hesaplar.
+    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    // HTML dökümanındaki "days" id'li elementin içeriğini gün sayısı ile günceller.
+    document.getElementById("days").innerHTML = days;
+
+    // HTML dökümanındaki "hours" id'li elementin içeriğini saat sayısı ile günceller.
+    document.getElementById("hours").innerHTML = hours;
+
+    // HTML dökümanındaki "minutes" id'li elementin içeriğini dakika sayısı ile günceller.
+    document.getElementById("minutes").innerHTML = minutes;
+
+    // HTML dökümanındaki "seconds" id'li elementin içeriğini saniye sayısı ile günceller.
+    document.getElementById("seconds").innerHTML = seconds;
+
+}, 1000); // Bu fonksiyon her 1000 milisaniyede (1 saniyede) bir çalışır.
